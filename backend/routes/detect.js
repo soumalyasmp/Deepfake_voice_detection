@@ -4,99 +4,124 @@ import path from "path";
 import fs from "fs";
 
 import { detectAudio } from "../detector.js";
+import { convertToWav } from "../audioConverter.js";
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
+    destination: "uploads/",
 
-    destination:"uploads/",
-
-    filename:(req,file,cb)=>{
-
+    filename: (req, file, cb) => {
         cb(
-
             null,
-
-            Date.now() +
-
-            path.extname(file.originalname)
-
+            Date.now() + path.extname(file.originalname)
         );
+    }
+});
+
+const upload = multer({ storage });
+
+router.post("/", upload.single("audio"), async (req, res) => {
+
+    let filePath = null;
+
+    try {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+                success: false,
+                message: "No audio uploaded."
+            });
+
+        }
+
+        console.log("========== Uploaded File ==========");
+        console.log(req.file);
+
+        filePath = req.file.path;
+
+        const extension = path
+            .extname(req.file.originalname)
+            .toLowerCase();
+
+        if (extension === ".webm") {
+
+            console.log("🎤 Live recording detected.");
+
+            console.log("Converting WebM to WAV...");
+
+            filePath = await convertToWav(req.file.path);
+
+            console.log("Converted File:", filePath);
+
+        }
+
+        console.log("Sending file to Reality Defender...");
+
+        const result = await detectAudio(filePath);
+
+        console.log("Detection Finished.");
+
+        return res.status(200).json({
+
+            success: true,
+
+            ...result
+
+        });
 
     }
 
-});
+    catch (err) {
 
-const upload = multer({
+        console.error(err);
 
-    storage
+        return res.status(500).json({
 
-});
+            success: false,
 
-router.post(
+            message: err.message
 
-    "/",
+        });
 
-    upload.single("audio"),
+    }
 
-    async(req,res)=>{
+    finally {
 
-        try{
+        try {
 
-            if(!req.file){
-
-                return res.status(400).json({
-
-                    success:false,
-
-                    message:"No Audio Uploaded"
-
-                });
-
-            }
-
-            console.log(req.file);
-
-            const result=
-
-            await detectAudio(req.file.path);
-
-            if(
-
-                fs.existsSync(req.file.path)
-
-            ){
+            if (req.file && fs.existsSync(req.file.path)) {
 
                 fs.unlinkSync(req.file.path);
 
+                console.log("Original file deleted.");
+
             }
 
-            return res.status(200).json({
+            if (
+                filePath &&
+                req.file &&
+                filePath !== req.file.path &&
+                fs.existsSync(filePath)
+            ) {
 
-                success:true,
+                fs.unlinkSync(filePath);
 
-                ...result
+                console.log("Converted WAV deleted.");
 
-            });
+            }
 
         }
 
-        catch(err){
+        catch (cleanupError) {
 
-            console.log(err);
-
-            return res.status(500).json({
-
-                success:false,
-
-                message:err.message
-
-            });
+            console.log("Cleanup Error:", cleanupError.message);
 
         }
 
     }
 
-);
+});
 
 export default router;
