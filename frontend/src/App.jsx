@@ -187,7 +187,7 @@ else {
       setError("");
 
       const response = await axios.post(
-        "http://localhost:5000/detect",
+        `${import.meta.env.VITE_API_URL}/detect`,
         formData,
         {
           headers: {
@@ -381,8 +381,7 @@ else {
         <div className="footer">
           <span className="footer-title">Deepfake voice detection</span>
           <div className="footer-meta">
-            <span>Powered by Reality Defender API</span>
-            <span>Developed by Soumalya Sinhamahapatra</span>
+            <span>Developed by Anish Sarkar, Debanjali Sen, Soumalya Sinhamahapatra</span>
             <span>B.Tech Information Technology</span>
           </div>
         </div>
