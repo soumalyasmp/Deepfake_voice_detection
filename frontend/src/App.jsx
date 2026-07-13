@@ -27,19 +27,19 @@ const rafRef = useRef(null);
 const [dragActive, setDragActive] = useState(false);
 const [history, setHistory] = useState([]);
 
-  const handleFileChange = (e) => {
+const handleFileChange = (e) => {
     const file = e.target.files[0];
 
     if (!file) return;
 
+    setRecordedBlob(null);      // <-- Add this
     setAudioFile(file);
 
     setAudioURL(URL.createObjectURL(file));
 
     setResult(null);
-
     setError("");
-  };
+};
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -51,18 +51,19 @@ const [history, setHistory] = useState([]);
     setDragActive(false);
   };
 
-  const handleDrop = (e) => {
+const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
 
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
+    setRecordedBlob(null);      // <-- Add this
     setAudioFile(file);
     setAudioURL(URL.createObjectURL(file));
     setResult(null);
     setError("");
-  };
+};
 
   const startRecording = async () => {
 
