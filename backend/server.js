@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
     origin: [
         "http://localhost:5173",
-        "https://deepfake-voice-detection-pi.vercel.app/"
+        "https://deepfake-voice-detection-pi.vercel.app"
     ],
     credentials: true
 }));
